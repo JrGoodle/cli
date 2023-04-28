@@ -58,6 +58,8 @@ export default class TeaError extends Error {
       msg = undent`
         couldn’t find a pkg to provide: \`${ctx.arg0}\`
 
+            maybe run \`tea --sync\` and try again?
+
             https://github.com/teaxyz/pantry#contributing
 
         `

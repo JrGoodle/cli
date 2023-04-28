@@ -9,6 +9,7 @@ Deno.test("errors", async test => {
     assertEquals(err.code(), "spilt-tea-003")
     assertEquals(err.title(), "not-found: tea -X: arg0")
     assert(err.message.includes("couldn’t find a pkg to provide: \`foo.com\`"), "message should be subsititued correctly")
+    assert(err.message.includes("maybe run \`tea --sync\` and try again?"), "message should be subsititued correctly")
   })
 
   await test.step("project not found in pantry", () => {
