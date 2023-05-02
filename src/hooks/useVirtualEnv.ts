@@ -1,6 +1,7 @@
 import { usePackageYAMLFrontMatter, refineFrontMatter, FrontMatter } from "./usePackageYAML.ts"
 import { flatmap, pkg, TeaError, validate_plain_obj } from "utils"
 import { useEnv, useMoustaches, usePrefix } from "hooks"
+import { getClosestPackageSuggestion } from "hooks/useErrorHandler.ts"
 import { PackageRequirement } from "types"
 import SemVer, * as semver from "semver"
 import { isPlainObject } from "is_what"
@@ -140,6 +141,42 @@ export default async function(cwd: Path = Path.cwd()): Promise<VirtualEnv> {
         pkgs.push(pkg.parse(s))
       } catch {
         throw new Error('couldn’t parse: .node-version')
+      }
+    }
+    if (_if("Brewfile")) {
+      const s = (await f!.read()).trim()
+      const lines = s.split(/\r?\n/)
+      for (const l of lines) {
+        if (!l.startsWith('brew')) continue  // skip non-brew lines
+
+        const regex = /brew\s+(['"])(.*?)\1/
+        const match = l.match(regex)
+
+        if (match && match[2]) {
+          const extractedValue = match[2]
+          let suggestion = await getClosestPackageSuggestion(extractedValue).swallow()
+          if (!suggestion) {
+            throw new Error(`couldn’t find a package for: ${extractedValue}`)
+          }
+          if (extractedValue.includes("@")) {
+            const regex = /brew\s+(['"]).*?@(.*?)\1/;
+            const match = l.match(regex);
+
+            if (match && match[2]) {
+              const extractedValue = match[2];
+              suggestion = `${suggestion}@${extractedValue}`
+            } else {
+              console.log("No match found")
+              throw new Error(`couldn’t find a package for: ${extractedValue}`)
+            }
+          }
+
+          try {
+            pkgs.push(pkg.parse(suggestion))
+          } catch {
+            throw new Error('couldn’t parse: Brewfile')
+          }
+        }
       }
     }
     if (_if("package.json")) {

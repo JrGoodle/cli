@@ -122,7 +122,7 @@ function msg(err: TeaError): string {
   return msg
 }
 
-async function getClosestPackageSuggestion(input: string) {
+export async function getClosestPackageSuggestion(input: string) {
   let choice: string | undefined
   let min = Infinity
   const pantry = usePantry()
